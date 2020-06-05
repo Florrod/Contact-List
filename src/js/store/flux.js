@@ -1,42 +1,80 @@
-const getState = ({ getStore, getActions, setStore }) => {
+const url = "https://assets.breatheco.de/apis/fake/contact/";
+const getState = ({ getStore, setStore }) => {
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			//Your data structures, A.K.A Entities
+			contactList: []
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
+			//(Arrow) Functions that update the Store
+			// Remember to use the scope: scope.state.store & scope.setState()
+			loadContact() {
+				fetch(url + "agenda/bad_bunny_baby_contact_list")
+					.then(response => response.json())
+					.then(result => {
+						setStore({
+							contactList: result
+						});
+					})
+					.catch(e => console.error(e));
 			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
+			addContact: (fullname, phone, email, address) => {
+				fetch(url, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						full_name: fullname,
+						phone: phone,
+						email: email,
+						address: address,
+						agenda_slug: "bad_bunny_baby_contact_list"
+					})
+				}).then(() => {
+					fetch(url + "agenda/bad_bunny_baby_contact_list")
+						.then(response => response.json())
+						.then(addData => {
+							setStore({ contactList: addData });
+						})
+						.catch(e => console.error(e));
 				});
+			},
 
-				//reset the global store
-				setStore({ demo: demo });
+			updateContact: (id, fullname, phone, email, address) => {
+				fetch(url + id, {
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						full_name: fullname,
+						phone: phone,
+						email: email,
+						address: address,
+						agenda_slug: "bad_bunny_baby_contact_list"
+					})
+				}).then(() => {
+					fetch(url + "agenda/bad_bunny_baby_contact_list")
+						.then(response => response.json())
+						.then(updatedData => {
+							setStore({ contactList: updatedData });
+						})
+						.catch(e => console.error(e));
+				});
+			},
+			deleteContact: id => {
+				fetch(url + id, {
+					method: "DELETE"
+				}).then(() => {
+					fetch(url + "agenda/bad_bunny_baby_contact_list")
+						.then(response => response.json())
+						.then(deleteData => {
+							setStore({ contactList: deleteData });
+						})
+						.catch(e => console.error(e));
+				});
 			}
 		}
 	};
